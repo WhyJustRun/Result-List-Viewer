@@ -20,25 +20,45 @@ wjr.IOF.Course = function(id, name, results) {
 	this.name = name;
 	this.results = ko.observableArray(results);
 }
+
+wjr.IOF.friendlyStatuses = {
+	'OK': '',
+	'Inactive': 'Inactive',
+	'DidNotStart': 'DNS',
+	'Active': 'In Progress',
+	'Finished': 'Unofficial',
+	'MisPunch': 'MP',
+	'DidNotFinish': 'DNF',
+	'Disqualified': 'DSQ',
+	'NotCompeting': 'NC',
+	'SportWithdr': 'Sport Withdrawal',
+	'OverTime': 'Over Time',
+	'Moved': 'Moved',
+	'MovedUp': 'Moved Up',
+	'Cancelled': 'Cancelled'
+};
 	
-wjr.IOF.Result = function(time, position, person) {
+wjr.IOF.Result = function(time, position, status, scores, person) {
 	if(time != null && !isNaN(time)) {
 		this.time = time;
 		this.hours = zeroFill((time - time % 3600) / 3600, 2);
-		this.minutes = zeroFill((time - time % 60) / 60 - this.hours * 3600, 2);
+		this.minutes = zeroFill((time - time % 60) / 60 - this.hours * 60, 2);
 		this.seconds = zeroFill(time % 60, 2);
 	} else {
 		this.time = this.hours = this.minutes = this.seconds = null;
 	}
-	
+	this.status = status;
+	this.friendlyStatus = wjr.IOF.friendlyStatuses[status];
 	this.position = position;
+	this.scores = scores;
 	this.person = person;
 }
 
-wjr.IOF.Person = function(id, givenName, familyName) {
+wjr.IOF.Person = function(id, givenName, familyName, profileUrl) {
 	this.id = id;
 	this.givenName = givenName;
 	this.familyName = familyName;
+	this.profileUrl = profileUrl;
 }
 
 wjr.IOF.loadResultsList = function(xml) {
@@ -60,10 +80,16 @@ wjr.IOF.loadResultsList = function(xml) {
 			var person = element.children("Person").first();
 			var personGivenName = person.children("Name").children("Given").text();
 			var personFamilyName = person.children("Name").children("Family").text();
+			var personProfileUrl = person.children("Contact[type='WebAddress']").text();
 			var personId = person.children("Id").text();
 			var resultTime = parseInt(element.children("Result").children("Time").text());
+			var resultStatus = element.children("Result").children("Status").text();
 			var resultPosition = element.children("Result").children("Position").text();
-			results.push(new wjr.IOF.Result(resultTime, resultPosition, new wjr.IOF.Person(personId, personGivenName, personFamilyName)));
+			var resultScores = {};
+			element.children("Result").children("Score").each(function(index, element) {
+				resultScores[$(element).attr("type")] = $(element).text();
+			});
+			results.push(new wjr.IOF.Result(resultTime, resultPosition, resultStatus, resultScores, new wjr.IOF.Person(personId, personGivenName, personFamilyName, personProfileUrl)));
 		});
 		courses.push(new wjr.IOF.Course(courseId, courseName, results));
 	})
