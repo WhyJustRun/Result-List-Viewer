@@ -6,34 +6,33 @@
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 	<script type="text/javascript" src="http://cloud.github.com/downloads/SteveSanderson/knockout/knockout-2.0.0.js"></script>
 	<script type="text/javascript" src="result_viewer.js"></script>
-	<script type="text/html" id="result-list-template">
-	    <h2 data-bind="text: name"></h2>
-		<table>
-		<tr>
-		<th>Position</th>
-		<th>Participant</th>
-		<th>Time</th>
-		<th>WJR Points</th>
-		</tr>
-		<tbody data-bind="template: { name: 'result-template', foreach: results }"></tbody>
-		</table>
-	</script>
-	
-	<script type="text/html" id="result-template">
-		<tr>
-			<td data-bind="text: position || friendlyStatus"></td>
-			<td><a data-bind="attr: { href: person.profileUrl }"><span data-bind="text: person.givenName + ' ' + person.familyName"></span></a></td>
-			<td data-bind="text: time != null ? hours + ':' + minutes + ':' + seconds : ''"></td>
-			<td data-bind="text: scores['WhyJustRun']"></td>
-		</tr>
-	</script>
 </head>
 <body>
 	<header>
 		<h1>Result Viewer</h1>
 	</header>
-	<div id="list" class="result-list" data-result-list-url="http://localhost:3000/iof/3.0/events/700/result_list.xml">
-		<div data-bind="template: { name: 'result-list-template', foreach: courses }"></div>
+	<div id="list" class="result-list" data-result-list-url="http://whyjustrun.ca/iof/3.0/events/700/result_list.xml">
+		<div data-bind="foreach: courses">
+			<h3 data-bind="text: name"></h3>
+			<table>
+				<thead>
+					<tr>
+						<th>Position</th>
+						<th>Participant</th>
+						<th>Time</th>
+						<th>Points</th>
+					</tr>
+				</thead>
+				<tbody data-bind="foreach: results">
+					<tr>
+						<td data-bind="text: position || friendlyStatus"></td>
+						<td><a data-bind="attr: { href: person.profileUrl }"><span data-bind="text: person.givenName + ' ' + person.familyName"></span></a></td>
+						<td data-bind="text: time != null ? hours + ':' + minutes + ':' + seconds : ''"></td>
+						<td data-bind="text: scores['WhyJustRun']"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 	</div>
 </body>
 </html>
