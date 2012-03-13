@@ -1,3 +1,11 @@
+function zeroFill(number, width) {
+	width -= number.toString().length;
+	if (width > 0) {
+		return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+	}
+	return number;
+}
+
 // Sample: http://whyjustrun.ca/iof/3.0/events/746/result_list.xml
 var wjr = {};
 wjr.IOF = {};
@@ -13,9 +21,18 @@ wjr.IOF.Course = function(id, name, results) {
 	this.results = ko.observableArray(results);
 }
 	
-wjr.IOF.Result = function(time, person) {
-	this.time = time;
-	this.person =person;
+wjr.IOF.Result = function(time, position, person) {
+	if(time != null && !isNaN(time)) {
+		this.time = time;
+		this.hours = zeroFill((time - time % 3600) / 3600, 2);
+		this.minutes = zeroFill((time - time % 60) / 60 - this.hours * 3600, 2);
+		this.seconds = zeroFill(time % 60, 2);
+	} else {
+		this.time = this.hours = this.minutes = this.seconds = null;
+	}
+	
+	this.position = position;
+	this.person = person;
 }
 
 wjr.IOF.Person = function(id, givenName, familyName) {
@@ -28,11 +45,15 @@ wjr.IOF.loadResultsList = function(xml) {
 	var resultList = $(xml.documentElement);
 	var event = resultList.children("Event").first();
 	var references = resultList.children("References").first();
+	var classes = {};
+	references.children("Class").each(function(index, element) {
+		classes[$(element).children("Id").text()] = $(element).children("Name").text();
+	})
 	var courses = [];
 	resultList.children('ClassResult').each(function(index, element) {
 		element = $(element);
 		var courseId = element.children("Class").attr("idref");
-		var courseName = courseId; // NOTE-RWP Temporary
+		var courseName = classes[courseId];
 		var results = [];
 		element.children('PersonResult').each(function(index, element) {
 			element = $(element);
@@ -41,9 +62,9 @@ wjr.IOF.loadResultsList = function(xml) {
 			var personFamilyName = person.children("Name").children("Family").text();
 			var personId = person.children("Id").text();
 			// TODO-RWP Process resultTime
-			var resultTime = element.children("Result").children("Time").text();
+			var resultTime = parseInt(element.children("Result").children("Time").text());
 			var resultPosition = element.children("Result").children("Position").text();
-			results.push(new wjr.IOF.Result(resultTime, new wjr.IOF.Person(personId, personGivenName, personFamilyName)));
+			results.push(new wjr.IOF.Result(resultTime, resultPosition, new wjr.IOF.Person(personId, personGivenName, personFamilyName)));
 		});
 		courses.push(new wjr.IOF.Course(courseId, courseName, results));
 	})
