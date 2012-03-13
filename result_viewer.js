@@ -61,7 +61,6 @@ wjr.IOF.loadResultsList = function(xml) {
 			var personGivenName = person.children("Name").children("Given").text();
 			var personFamilyName = person.children("Name").children("Family").text();
 			var personId = person.children("Id").text();
-			// TODO-RWP Process resultTime
 			var resultTime = parseInt(element.children("Result").children("Time").text());
 			var resultPosition = element.children("Result").children("Position").text();
 			results.push(new wjr.IOF.Result(resultTime, resultPosition, new wjr.IOF.Person(personId, personGivenName, personFamilyName)));
